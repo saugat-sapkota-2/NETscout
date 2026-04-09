@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LAN Pulse Scanner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+
+    <main class="layout">
+      <section class="hero card">
+        <div class="title-wrap">
+          <p class="kicker">Network Observatory</p>
+          <h1>LAN Pulse Scanner</h1>
+          <p class="subtitle">
+            Discover devices connected to your current Wi-Fi/LAN with fast host sweep,
+            hostname resolution, and MAC visibility.
+          </p>
+          <div class="developer-card" aria-label="Developer section">
+            <div class="dev-avatar">R</div>
+            <div class="dev-meta">
+              <p class="dev-label">Developer</p>
+              <p class="developer">reinF (Saugat Sapkota.)</p>
+            </div>
+            <div class="dev-spark" aria-hidden="true"></div>
+          </div>
+          <h2 class="outside-heading">IP-SCANNER</h2>
+          <div class="mode-chips" aria-hidden="true">
+            <span>Wi-Fi</span>
+            <span>LAN</span>
+            <span>Auto</span>
+          </div>
+        </div>
+
+        <form id="scan-form" class="controls">
+          <label>
+            <span>Subnet (CIDR)</span>
+            <input id="subnet" name="subnet" type="text" placeholder="Auto detect (example: 192.168.1.0/24)" />
+          </label>
+
+          <label>
+            <span>Timeout (ms)</span>
+            <input id="timeout" name="timeout" type="number" min="50" max="2000" value="250" />
+          </label>
+
+          <label>
+            <span>Workers</span>
+            <input id="workers" name="workers" type="number" min="1" max="512" value="96" />
+          </label>
+
+          <div class="scan-actions">
+            <p class="control-caption">Scan mode</p>
+            <div class="control-row">
+              <button id="scan-wifi-btn" type="button" class="mode-btn ghost" data-mode="wifi">Run Wi-Fi Scan</button>
+              <button id="scan-lan-btn" type="button" class="mode-btn ghost" data-mode="lan">Run LAN Scan</button>
+            </div>
+            <div class="control-row">
+              <button id="scan-auto-btn" type="submit" class="mode-btn ghost" data-mode="auto">Run Auto Scan</button>
+              <button id="clear-btn" type="button" class="mode-btn ghost">Clear</button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <section class="results card">
+        <div class="toolbar">
+          <div class="stat-group">
+            <div class="stat">
+              <span class="stat-label">Subnet</span>
+              <strong id="subnet-stat">-</strong>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Devices</span>
+              <strong id="count-stat">0</strong>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Mode</span>
+              <strong id="mode-stat">auto</strong>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Duration</span>
+              <strong id="duration-stat">0.00s</strong>
+            </div>
+          </div>
+
+          <div class="toolbar-actions">
+            <input id="filter-input" type="text" placeholder="Filter by IP, MAC, hostname" />
+            <button id="export-btn" type="button" class="ghost">Export CSV</button>
+          </div>
+        </div>
+
+        <div id="status" class="status idle">Ready</div>
+
+        <div class="table-wrap">
+          <div class="table-headline">Detected Devices</div>
+          <table>
+            <thead>
+              <tr>
+                <th data-key="ip">IP</th>
+                <th data-key="mac">MAC</th>
+                <th data-key="hostname">Hostname</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="results-body">
+              <tr>
+                <td colspan="4" class="empty">No results yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <section class="detail-panel">
+          <div class="table-headline">Selected Device Details</div>
+          <div class="detail-grid">
+            <div><span>IP</span><strong id="detail-ip">-</strong></div>
+            <div><span>MAC</span><strong id="detail-mac">-</strong></div>
+            <div><span>Hostname</span><strong id="detail-hostname">-</strong></div>
+            <div><span>Type</span><strong id="detail-type">Unknown</strong></div>
+            <div><span>Status</span><strong id="detail-status">Not selected</strong></div>
+            <div><span>Privacy Note</span><strong id="detail-note">App-level traffic is not available in basic LAN scan.</strong></div>
+          </div>
+          <div class="detail-log-wrap">
+            <p class="detail-log-title">Detail Log</p>
+            <ul id="detail-log" class="detail-log">
+              <li>No device selected.</li>
+            </ul>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
