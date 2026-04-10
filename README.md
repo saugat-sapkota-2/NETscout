@@ -9,7 +9,7 @@ It includes both:
 
 ## Dashboard Preview
 
-![LAN Pulse Scanner Dashboard](image.png)
+![NETscout v-2.0](image-v2.png)
 
 ## What This Project Does
 
