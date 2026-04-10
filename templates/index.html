@@ -1,144 +1,199 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LAN Pulse Scanner</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="/static/styles.css" />
-  </head>
-  <body>
-    <div class="bg-orb orb-a"></div>
-    <div class="bg-orb orb-b"></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NetScout - LAN Device Scanner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
 
-    <main class="layout">
-      <section class="hero card">
-        <div class="title-wrap">
-          <p class="kicker">Network Observatory</p>
-          <h1>LAN Pulse Scanner</h1>
-          <p class="subtitle">
-            Discover devices connected to your current Wi-Fi/LAN with fast host sweep,
-            hostname resolution, and MAC visibility.
-          </p>
-          <div class="developer-card" aria-label="Developer section">
-            <div class="dev-avatar">R</div>
-            <div class="dev-meta">
-              <p class="dev-label">Developer</p>
-              <p class="developer">reinF (Saugat Sapkota.)</p>
-            </div>
-            <div class="dev-spark" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
+
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="3" fill="currentColor"/>
+            <circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="1" fill="none" opacity="0.5"/>
+            <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="0.5" fill="none" opacity="0.25"/>
+            <line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" stroke-width="1"/>
+            <line x1="10" y1="16" x2="10" y2="19" stroke="currentColor" stroke-width="1"/>
+            <line x1="1" y1="10" x2="4" y2="10" stroke="currentColor" stroke-width="1"/>
+            <line x1="16" y1="10" x2="19" y2="10" stroke="currentColor" stroke-width="1"/>
+          </svg>
+        </div>
+        <span class="brand-name">NetScout</span>
+        <span class="brand-ver">v2.0</span>
+      </div>
+
+      <nav class="topbar-nav" aria-label="Scan mode">
+        <button class="nav-chip" data-mode="wifi" type="button">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1.42 9a16 16 0 0 1 21.16 0M5 12.55a11 11 0 0 1 14.08 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+          Wi-Fi
+        </button>
+        <button class="nav-chip" data-mode="lan" type="button">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="1"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          LAN
+        </button>
+        <button class="nav-chip active" data-mode="auto" type="button">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          Auto
+        </button>
+      </nav>
+
+      <div class="topbar-meta">
+        <div class="live-indicator" aria-label="System active">
+          <span class="live-dot"></span>
+          <span class="live-text">SYSTEM ACTIVE</span>
+        </div>
+        <div class="dev-badge">
+          <span class="dev-avatar">R</span>
+          <div class="dev-info">
+            <span class="dev-name">reinF</span>
+            <span class="dev-sub">Saugat Sapkota</span>
           </div>
-          <h2 class="outside-heading">IP-SCANNER</h2>
-          <div class="mode-chips" aria-hidden="true">
-            <span>Wi-Fi</span>
-            <span>LAN</span>
-            <span>Auto</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <aside class="sidebar">
+        <div class="sidebar-section">
+          <p class="section-label">// target subnet</p>
+          <div class="field">
+            <label for="subnet" class="field-label">CIDR Range</label>
+            <input id="subnet" class="field-input" type="text" placeholder="Auto-detect" autocomplete="off" spellcheck="false" />
+            <span class="field-hint" id="subnetHint">e.g. 192.168.1.0/24</span>
           </div>
         </div>
 
-        <form id="scan-form" class="controls">
-          <label>
-            <span>Subnet (CIDR)</span>
-            <input id="subnet" name="subnet" type="text" placeholder="Auto detect (example: 192.168.1.0/24)" />
-          </label>
-
-          <label>
-            <span>Timeout (ms)</span>
-            <input id="timeout" name="timeout" type="number" min="50" max="2000" value="250" />
-          </label>
-
-          <label>
-            <span>Workers</span>
-            <input id="workers" name="workers" type="number" min="1" max="512" value="96" />
-          </label>
-
-          <div class="scan-actions">
-            <p class="control-caption">Scan mode</p>
-            <div class="control-row">
-              <button id="scan-wifi-btn" type="button" class="mode-btn ghost" data-mode="wifi">Run Wi-Fi Scan</button>
-              <button id="scan-lan-btn" type="button" class="mode-btn ghost" data-mode="lan">Run LAN Scan</button>
+        <div class="sidebar-section">
+          <p class="section-label">// parameters</p>
+          <div class="field-row">
+            <div class="field">
+              <label for="timeout" class="field-label">Timeout (ms)</label>
+              <input id="timeout" class="field-input" type="number" min="50" max="2000" value="250" />
             </div>
-            <div class="control-row">
-              <button id="scan-auto-btn" type="submit" class="mode-btn ghost" data-mode="auto">Run Auto Scan</button>
-              <button id="clear-btn" type="button" class="mode-btn ghost">Clear</button>
+            <div class="field">
+              <label for="workers" class="field-label">Workers</label>
+              <input id="workers" class="field-input" type="number" min="1" max="512" value="96" />
             </div>
           </div>
-        </form>
-      </section>
+        </div>
 
-      <section class="results card">
-        <div class="toolbar">
-          <div class="stat-group">
-            <div class="stat">
-              <span class="stat-label">Subnet</span>
-              <strong id="subnet-stat">-</strong>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Devices</span>
-              <strong id="count-stat">0</strong>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Mode</span>
-              <strong id="mode-stat">auto</strong>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Duration</span>
-              <strong id="duration-stat">0.00s</strong>
-            </div>
+        <div class="sidebar-section">
+          <p class="section-label">// actions</p>
+          <button id="scanBtn" class="btn-primary" type="button">
+            <span class="btn-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            </span>
+            <span class="btn-label">Run Scan</span>
+            <span class="btn-arrow">-&gt;</span>
+          </button>
+          <button id="clearBtn" class="btn-ghost" type="button">Clear Results</button>
+        </div>
+
+        <div class="term-block" aria-hidden="true">
+          <div class="term-line"><span class="term-prompt">$</span> <span class="term-cmd">netscan --auto</span></div>
+          <div class="term-line term-out" id="termLine1">Initializing...</div>
+          <div class="term-line term-out" id="termLine2">Awaiting command_</div>
+        </div>
+
+        <div class="sidebar-stats">
+          <div class="sstat">
+            <span class="sstat-label">Subnet</span>
+            <span class="sstat-val mono" id="sSub">-</span>
           </div>
+          <div class="sstat">
+            <span class="sstat-label">Devices</span>
+            <span class="sstat-val mono accent" id="sCount">0</span>
+          </div>
+          <div class="sstat">
+            <span class="sstat-label">Mode</span>
+            <span class="sstat-val mono" id="sMode">auto</span>
+          </div>
+          <div class="sstat">
+            <span class="sstat-label">Duration</span>
+            <span class="sstat-val mono" id="sDur">0.00s</span>
+          </div>
+        </div>
+      </aside>
 
+      <section class="results-panel">
+        <div class="status-strip" id="statusStrip">
+          <div class="status-icon idle" id="statusIcon" aria-hidden="true"></div>
+          <span class="status-msg" id="statusMsg">Ready - configure parameters and run a scan</span>
+          <span class="status-code mono" id="statusCode">IDLE</span>
+        </div>
+
+        <div class="results-toolbar">
+          <div class="search-wrap">
+            <svg class="search-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input id="filterInput" class="search-input" type="text" placeholder="Filter by IP, MAC, hostname..." autocomplete="off" />
+          </div>
           <div class="toolbar-actions">
-            <input id="filter-input" type="text" placeholder="Filter by IP, MAC, hostname" />
-            <button id="export-btn" type="button" class="ghost">Export CSV</button>
+            <button id="accessBtn" class="btn-danger" type="button" disabled>Access Check</button>
+            <button id="exportBtn" class="btn-ghost sm" type="button">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export CSV
+            </button>
           </div>
         </div>
 
-        <div id="status" class="status idle">Ready</div>
-
-        <div class="table-wrap">
-          <div class="table-headline">Detected Devices</div>
-          <table>
+        <div class="table-container">
+          <table class="scan-table">
             <thead>
               <tr>
-                <th data-key="ip">IP</th>
-                <th data-key="mac">MAC</th>
-                <th data-key="hostname">Hostname</th>
-                <th>Details</th>
+                <th data-key="ip" class="sortable" id="thIP">
+                  <span>IP Address</span><span class="sort-arrow">&harr;</span>
+                </th>
+                <th data-key="mac" class="sortable" id="thMAC">
+                  <span>MAC Address</span><span class="sort-arrow">&harr;</span>
+                </th>
+                <th data-key="hostname" class="sortable" id="thHost">
+                  <span>Hostname</span><span class="sort-arrow">&harr;</span>
+                </th>
+                <th class="th-action">Action</th>
               </tr>
             </thead>
-            <tbody id="results-body">
-              <tr>
-                <td colspan="4" class="empty">No results yet.</td>
+            <tbody id="tblBody">
+              <tr class="empty-row">
+                <td colspan="4">
+                  <div class="empty-state">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6" opacity="0.5"/><circle cx="12" cy="12" r="2" opacity="0.7"/></svg>
+                    <p>No devices found yet.</p>
+                    <p class="empty-sub">Run a scan to discover devices on your network.</p>
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <section class="detail-panel">
-          <div class="table-headline">Selected Device Details</div>
-          <div class="detail-grid">
-            <div><span>IP</span><strong id="detail-ip">-</strong></div>
-            <div><span>MAC</span><strong id="detail-mac">-</strong></div>
-            <div><span>Hostname</span><strong id="detail-hostname">-</strong></div>
-            <div><span>Type</span><strong id="detail-type">Unknown</strong></div>
-            <div><span>Status</span><strong id="detail-status">Not selected</strong></div>
-            <div><span>Privacy Note</span><strong id="detail-note">App-level traffic is not available in basic LAN scan.</strong></div>
+        <div class="device-detail-panel">
+          <h3 class="device-detail-title">Selected Device Access</h3>
+          <div class="device-grid">
+            <div class="device-card"><span class="device-k">IP</span><span class="device-v mono" id="detailIp">-</span></div>
+            <div class="device-card"><span class="device-k">MAC</span><span class="device-v mono" id="detailMac">-</span></div>
+            <div class="device-card"><span class="device-k">Hostname</span><span class="device-v" id="detailHost">-</span></div>
+            <div class="device-card"><span class="device-k">Status</span><span class="device-v" id="detailStatus">No device selected</span></div>
           </div>
-          <div class="detail-log-wrap">
-            <p class="detail-log-title">Detail Log</p>
-            <ul id="detail-log" class="detail-log">
-              <li>No device selected.</li>
-            </ul>
-          </div>
-        </section>
+          <p class="device-note" id="detailNote">Select a device to check what it is accessible for.</p>
+          <ul class="access-list" id="detailAccess">
+            <li>Select a device and run Access Check.</li>
+          </ul>
+        </div>
       </section>
     </main>
+  </div>
 
-    <script src="/static/app.js"></script>
-  </body>
+  <script src="/static/app.js"></script>
+</body>
 </html>

@@ -51,6 +51,7 @@ py app.py
 ```text
 http://127.0.0.1:5050
 ```
+git commit -m "Netscout v1.0"
 
 ## Command Line Scanner
 

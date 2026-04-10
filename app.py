@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import ipaddress
 import re
+import socket
 import time
 from dataclasses import asdict
 from threading import Lock
@@ -19,6 +20,16 @@ from wifi_scanner import (
 
 app = Flask(__name__)
 scan_lock = Lock()
+
+COMMON_ACCESS_PORTS = [
+    (80, "HTTP"),
+    (443, "HTTPS"),
+    (22, "SSH"),
+    (3389, "RDP"),
+    (445, "SMB"),
+    (139, "NetBIOS"),
+    (53, "DNS"),
+]
 
 
 @app.get("/")
@@ -104,6 +115,31 @@ def resolve_subnet_for_mode(mode: str) -> str:
     raise RuntimeError("Invalid scan mode.")
 
 
+def check_common_access(ip: str, timeout_ms: int = 250) -> List[Dict[str, Any]]:
+    timeout_s = max(50, min(timeout_ms, 2000)) / 1000.0
+    results: List[Dict[str, Any]] = []
+
+    for port, name in COMMON_ACCESS_PORTS:
+        is_open = False
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.settimeout(timeout_s)
+                is_open = sock.connect_ex((ip, port)) == 0
+        except Exception:
+            is_open = False
+
+        results.append(
+            {
+                "port": port,
+                "service": name,
+                "open": is_open,
+                "label": f"{name} (:{port})",
+            }
+        )
+
+    return results
+
+
 @app.get("/api/defaults")
 def api_defaults() -> Any:
     try:
@@ -173,6 +209,49 @@ def api_scan() -> Any:
         return jsonify({"ok": False, "error": str(exc)}), 500
     finally:
         scan_lock.release()
+
+
+@app.post("/api/disconnect")
+def api_disconnect() -> Any:
+    payload: Dict[str, Any] = request.get_json(silent=True) or {}
+    ip = str(payload.get("ip", "")).strip()
+    if not ip:
+        return jsonify({"ok": False, "error": "ip is required"}), 400
+
+    return jsonify(
+        {
+            "ok": True,
+            "message": f"Disconnect request queued for {ip} (safe mode placeholder).",
+        }
+    )
+
+
+@app.post("/api/access")
+def api_access() -> Any:
+    payload: Dict[str, Any] = request.get_json(silent=True) or {}
+    ip = str(payload.get("ip", "")).strip()
+    timeout_ms = int(payload.get("timeout", 250))
+
+    if not ip:
+        return jsonify({"ok": False, "error": "ip is required"}), 400
+
+    try:
+        ipaddress.IPv4Address(ip)
+    except Exception:
+        return jsonify({"ok": False, "error": "Invalid IPv4 address"}), 400
+
+    access_rows = check_common_access(ip, timeout_ms=timeout_ms)
+    open_count = sum(1 for row in access_rows if row["open"])
+
+    return jsonify(
+        {
+            "ok": True,
+            "ip": ip,
+            "access": access_rows,
+            "openCount": open_count,
+            "message": f"Access check complete for {ip}: {open_count} open common port(s).",
+        }
+    )
 
 
 if __name__ == "__main__":
