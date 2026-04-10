@@ -9,7 +9,7 @@ It includes both:
 
 ## Dashboard Preview
 
-![NETscout v-2.0](image-v2.png)
+![NETscout v-2.0](image-v2.png?v=20260410-1)
 
 ## What This Project Does
 
